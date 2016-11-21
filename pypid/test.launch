@@ -1,0 +1,5 @@
+<launch>
+    <node name="test_pid" pkg="pypid" type="pid_node.py" output="screen" >
+      <param name="Kp" value="5.0" />
+      </node>
+</launch>
