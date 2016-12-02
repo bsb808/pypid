@@ -1,6 +1,5 @@
-\documentclass[12pt, letterpaper, twoside]{article}
- 
-
+%\documentclass[12pt, letterpaper, twoside]{article}
+\documentclass[12pt, letterpaper]{article}
  
 \usepackage{amssymb,longtable,dcolumn}
 % to use pdflatex
@@ -18,6 +17,7 @@
 \usepackage{amsmath}
 \usepackage{units}
 \usepackage{color,soul}
+\usepackage[margin=1in]{geometry}
 
 
 \title{Discrete Lowpass Filters}
@@ -30,7 +30,7 @@
 %\end{titlepage}
 
 \section*{Introduction}
-Digital (finite-difference) implementation of a second-order, Butterworth, low-pass filter.
+Digital (finite-difference) implementation first and second-order lowpass filters for use in control.
 
 \section{First-Order Lowpass}
 \subsection{Analog Form}
@@ -52,8 +52,41 @@ where the smoothing factor $0 \leq \alpha \leq 1$ is
 \url{https://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization}
 \url{http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf}
 
+Working backwards we can define the transfer function for this as
+\[
+H(z) = \frac{\alpha}{1 + (1-\alpha)z^{-1}}
+\]
+
 \subsection{Bilinear Transform}
-An alternate form is derived is we apply the bilinear transform to the original transfer function.
+An alternate form is derived is we apply the bilinear transform to the original transfer function.  Write the transfer function in normalized form
+\[
+H(s) = \frac{1}{\left(\frac{s}{\omega_{ac}}\right)+1}
+\]
+Apply a pre-warping transformation to calculate the equivalent analog cut-off frequency
+\[
+\omega_{ac} = \tan{\left(\frac{\omega_c (\Delta t)}{2}\right)}
+\]
+and let
+\[
+c = \frac{1}{\omega_{ac}}=\cot{\left(\frac{\omega_c (\Delta t)}{2}\right)}
+\]
+Substitute 
+\[
+H(s) = \frac{1}{(c)s+1}
+\]
+Apply bilinear transform using $s=(1-z^{-1})/(1+z^{-1})$
+\[
+H(z) = \frac{1}{c\left(\frac{1-z^{-1}}{1+z^{-1}}\right)+1}
+\]
+\[
+H(z) = \frac{1 + z^{-1}}{(1+c)+(1-c)z^{-1}}
+\]
+then covert to a difference equation
+\[
+y[k] = \frac{1}{c+1} \left[ (1-c) y[k-1] + x[k] + x[k-1] \right]
+\]
+which agrees wtih the coefficients listed at \url{http://www.apicsllc.com/apics/Sr_3/Sr_3.htm}.
+
 \url{https://ocw.mit.edu/courses/mechanical-engineering/2-161-signal-processing-continuous-and-discrete-fall-2008/lecture-notes/lecture_19.pdf}
 
 
@@ -70,8 +103,8 @@ H(s) = \frac{\omega_c^2}{s^2 + (\sqrt{2})\omega_c s + \omega^2}
 The frequency response of this analog transfer function is shown in Figure~\ref{f:butter}
 \begin{figure}[ht!]
 \centering
-{\includegraphics[width=0.6\textwidth]{butter_2.png}}
-\caption{Frequency response.}
+{\includegraphics[width=0.75\textwidth]{butter_2.png}}
+\caption{Analog frequency response.}
 \label{f:butter}
 \end{figure}
 
@@ -137,8 +170,25 @@ H(s) = \frac{1}{(cs)^2 + (\sqrt{2})(cs) + 1}
 \]
 Now perform the bilinear transform by substituting
 \[
-s = frac{z-1}{z+1}={1-z^{-1}}{1+z^{-1}}
+s = \frac{z-1}{z+1}=\frac{1-z^{-1}}{1+z^{-1}}
 \]
-algebra goes here
+to get
+\[
+H(z) = \frac{ (1+z^{-1})^2 }{ c^2 (1-z^{-1})^2 + (\sqrt{2}) c (1-z^{-1})(1+z^{-1})+(1+z^{-1})^2}
+\]
+\[
+H(z) = \frac{ 1 + 2 z^{-1} + z^{-2} }{ (c^2+(\sqrt{2})c+1) - 2(c^2-1)z^{-1} + (c^2 - (\sqrt{2})c +1) z^{-2}}
+\]
+
+\section{Verification and Comparison}
+Figure~\ref{f:imp} illustrates the frequency reponse of the three digital filters.  The frequency response is determined from the z-domain transfer funtions.  for the two first-order implementations We can see that the simpler alpha-filter implementation has an equivalent frequency response to the bilinear implementation.  
+
+For the second-order Butterworth filter, the frequncy reponse verifies that the bilinear transform, with pre-warping the critical frequency, reproduces the analog frequency response of the design.
+\begin{figure}[ht!]
+\centering
+{\includegraphics[width=0.75\textwidth]{filter_freqresp.png}}
+\caption{Frequency response of digital implementation.}
+\label{f:imp}
+\end{figure}
 
 \end{document}
