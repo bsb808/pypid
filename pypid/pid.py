@@ -5,6 +5,9 @@ Independent of ROS
 
 from math import copysign
 from math import exp
+from math import tan
+import numpy as np
+
 # For convenience...
 def saturate(num,level):
     return copysign(1,num)*min(abs(num),level)      
@@ -23,11 +26,47 @@ def angleError(A,B=0.0,bound=180.0):
         
 # Low-pass Filter Classes
 class Firstlowpass(object):
-    def __init__():
-        pass
+    ''' 
+    Implements a first-order lowpass filter based on 
+    specified cut-off freq. (wc) in rad/s
+    '''
+    def __init__(self,wc):
+        self.wc = wc
+        self.previn = 0  # initialize previous input
+    def execute(self,x,dt):
+        '''
+        One step of the filter with input x and sample time dt
+        '''
+        a = self.wc*dt/(self.wc*dt+1)
+        out = (1-a)*self.previn + a*x
+        self.previn = x
+        return out
+        
 class Secondbutter(object):
-    def __init__():
-        pass
+    '''
+    Implementation of second-order lowpass Butterworth fitler based
+    on cut-off freq (wc) in rad/s
+    '''
+    def __init__(self,wc):
+        self.wc = wc
+        self.prevy = np.zeros(2)  # memory for prev. outputs
+        self.prevx = np.zeros(2)  # memory for prev. inputs
+    def execute(self,x,dt):
+        wac = tan(self.wc*dt/2.0)
+        # Make sure this is sufficiently far from zero
+        eps = 0.01  # minimum allowable value for wac
+        wac = copysign(1,wac)*max(abs(wac),eps)
+        c = 1/wac
+        out = (1/(c*c+1.4142*c+1)) * (2*(c*c-1)*self.prevy[0] -
+                                      (c*c-1.4142*c+1)*self.prevy[1] +
+                                      x + 2*self.prevx[0]+self.prevx[1])
+        # Shift the memory
+        self.prevy[1]=self.prevy[0]
+        self.prevy[0]=out
+        self.prevx[1]=self.prevx[0]
+        self.prevx[0]=x
+        return out
+
 # Enumeration classes for describing variants
 class Dtype():
     STANDARD=1

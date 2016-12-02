@@ -49,13 +49,19 @@ where the smoothing factor $0 \leq \alpha \leq 1$ is
 \alpha & = & \frac{\Delta t}{\tau + \Delta t} = \frac{1}{1+(\tau / \Delta t)}\\
        & = & \frac{\omega_c (\Delta t)}{(\omega_c (\Delta t)+1)}.
 \end{eqnarray*}
-\url{https://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization}
-\url{http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf}
+This implementation can be derived using the ``backward rectangular rule'' for numerical integration of the original ODE.
 
-Working backwards we can define the transfer function for this as
+
+Working backwards we can define the discrete-time (z-domain) transfer function for this as
 \[
-H(z) = \frac{\alpha}{1 + (1-\alpha)z^{-1}}
+H(z) = \frac{\alpha}{1 + (1-\alpha)z^{-1}}.
 \]
+
+\begin{itemize}
+\item \url{http://web.cecs.pdx.edu/~tymerski/ece452/6.pdf}
+\item \url{https://en.wikipedia.org/wiki/Low-pass_filter#Discrete-time_realization}
+\item \url{http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf}
+\end{itemize}
 
 \subsection{Bilinear Transform}
 An alternate form is derived is we apply the bilinear transform to the original transfer function.  Write the transfer function in normalized form
@@ -87,7 +93,9 @@ y[k] = \frac{1}{c+1} \left[ (1-c) y[k-1] + x[k] + x[k-1] \right]
 \]
 which agrees wtih the coefficients listed at \url{http://www.apicsllc.com/apics/Sr_3/Sr_3.htm}.
 
-\url{https://ocw.mit.edu/courses/mechanical-engineering/2-161-signal-processing-continuous-and-discrete-fall-2008/lecture-notes/lecture_19.pdf}
+\begin{itemize}
+\item \url{https://ocw.mit.edu/courses/mechanical-engineering/2-161-signal-processing-continuous-and-discrete-fall-2008/lecture-notes/lecture_19.pdf}
+\end{itemize}
 
 
 \section{Second-Order Butterworth Filter}
@@ -149,7 +157,7 @@ y[k] = \frac{1}{(c^2+(\sqrt{2})c+1)} \biggl[ 2(c^2-1)(y[k-1]) -(c^2-(\sqrt{2})c+
 \subsection{Derivation of General Second Order Butterworth Filter}
 Start with the general analog Butterworth transfer function.
 \[
-H(s) = \frac{\omega_c^2}{s^2 + (\sqrt{2})\omega_c s + \omega^2}
+H(s) = \frac{\omega_c^2}{s^2 + (\sqrt{2})\omega_c s + \omega_c^2}
 \]
 Put into normalized from
 \[
