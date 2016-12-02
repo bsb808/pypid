@@ -1,5 +1,6 @@
 '''
-Should be independent of ROS
+PID controller class
+Independent of ROS
 '''
 
 from math import copysign
@@ -20,8 +21,21 @@ def angleError(A,B=0.0,bound=180.0):
         err -= 2*bound
     return err
         
+# Low-pass Filter Classes
+class Firstlowpass(object):
+    def __init__():
+        pass
+class Secondbutter(object):
+    def __init__():
+        pass
+# Enumeration classes for describing variants
+class Dtype():
+    STANDARD=1
+    FIRSTORDER=2   # First-order filter, require Td in Pid obj.
+
+
 class Pid(object):
-    def __init__(self,Kp,Kd,Td,Ki,maxIout=1.0,
+    def __init__(self,Kp,Kd,Td,Ki,maxIout=None,
                  InputIsAngle=False):
         self.Kp = float(Kp)
         self.Kd = float(Kd)
