@@ -1,7 +1,7 @@
 # To be run with ipython --pylab
 
-import pid
-reload (pid)
+import pypid
+reload (pypid)
 
 close('all')
 

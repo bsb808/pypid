@@ -1,10 +1,10 @@
 """PID controller class
 Independent of ROS
 """
+__version__ = "0.0.1"
 
 from math import copysign
-from math import exp
-from math import tan
+from math import exp, tan, pi
 import numpy as np
 
 # For convenience...
@@ -160,6 +160,7 @@ class Pid(object):
         self.maxIout = maxIout
         # Angle wrap
         self.inputIsAngle=bool(inputIsAngle)
+        self.anglewrap = pi
         # Input filter
         self.inputfilter = Zerolowpass()
         # Input filter
@@ -172,6 +173,7 @@ class Pid(object):
         self.prevsetpoint = 0.0  # for calculating raw deriv
         self.prevstate = 0.0
         self.setpoint = 0.0
+
 
     def initfilter(self,order,wc):
         """
@@ -206,8 +208,9 @@ class Pid(object):
     def set_maxIout(self,maxIout):
         self.maxIout=float(maxIout)
 
-    def set_inputisangle(self,inputIsAngle):
+    def set_inputisangle(self,inputIsAngle,bound=pi):
         self.inputIsAngle=bool(inputIsAngle)
+        self.anglewrap = bound
 
     def set_setpoint(self,setpoint):
         self.setpoint=float(setpoint)
@@ -225,7 +228,7 @@ class Pid(object):
             return np.array([0,0,0,0])
         # Calc error
         if self.inputIsAngle:
-            err=angleError(self.setpoint,state)
+            err=angleError(self.setpoint,state,self.anglewrap)
         else:
             err=self.setpoint-state
         # Proportional
@@ -234,7 +237,10 @@ class Pid(object):
         # Derivative
         if dstate is None:
             # calculate raw derivative
-            dest = (state-self.prevstate)/dt
+            if self.inputIsAngle:
+                dest = angleError(state,self.prevstate,self.anglewrap)/dt
+            else:
+                dest = (state-self.prevstate)/dt
         else:
             dest = dstate
         self.prevstate = state
@@ -244,7 +250,11 @@ class Pid(object):
             deriv = -1*dest
         else:
             # Derivative in forward loop
-            dsetpoint = (self.setpoint-self.prevsetpoint)/dt
+            if self.inputIsAngle:
+                dsetpoint = angleError(self.setpoint,self.prevsetpoint,
+                                       self.anglewrap)/dt
+            else:
+                dsetpoint = (self.setpoint-self.prevsetpoint)/dt
             deriv = dsetpoint-dest
         self.prevsetpoint = self.setpoint
         D = self.Kd*self.derivfilter.execute(dt,deriv)
