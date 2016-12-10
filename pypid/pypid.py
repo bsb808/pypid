@@ -257,7 +257,8 @@ class Pid(object):
                 dsetpoint = (self.setpoint-self.prevsetpoint)/dt
             deriv = dsetpoint-dest
         self.prevsetpoint = self.setpoint
-        D = self.Kd*self.derivfilter.execute(dt,deriv)
+        derivative = self.derivfilter.execute(dt,deriv) 
+        D = self.Kd*derivative
         # Integral 
         self.I = self.I + err*dt
         # Anti-Windup - simple limit on the size of the I contribution
@@ -269,5 +270,5 @@ class Pid(object):
         # Sum
         Out = P+I+D
 
-        return np.array([Out,P,I,D])
+        return np.array([Out,P,I,D,err,self.setpoint,derivative,self.I])
 
