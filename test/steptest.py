@@ -1,5 +1,5 @@
 # To be run with ipython --pylab
-
+from pylab import *
 import pypid
 reload (pypid)
 
@@ -33,13 +33,13 @@ Kd = 50.0
 # dict list of controllers to test
 Conts={}
 # Compare standard with deriv feedback
-Conts['Pstandard'] = pid.Pid(Kp,Ki,Kd)
-Conts['Pderivfeedback'] = pid.Pid(Kp,Ki,Kd)
+Conts['Pstandard'] = pypid.Pid(Kp,Ki,Kd)
+Conts['Pderivfeedback'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Pderivfeedback'].set_derivfeedback(True)
-Conts['Pderivfeedbackdfilt'] = pid.Pid(Kp,Ki,Kd)
+Conts['Pderivfeedbackdfilt'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Pderivfeedbackdfilt'].set_derivfeedback(True)
 Conts['Pderivfeedbackdfilt'].set_derivfilter(2,wc)
-Conts['Pderivfeedbackbothfilt'] = pid.Pid(Kp,Ki,Kd)
+Conts['Pderivfeedbackbothfilt'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Pderivfeedbackbothfilt'].set_derivfeedback(True)
 Conts['Pderivfeedbackbothfilt'].set_derivfilter(2,wc)
 Conts['Pderivfeedbackbothfilt'].set_inputfilter(2,wc)
@@ -50,18 +50,18 @@ Kp = 10.0
 Ki = 10.0
 Kd = 1.0
 
-Conts['Vstandard'] = pid.Pid(Kp,Ki,Kd)
-Conts['Vderivfeedback'] = pid.Pid(Kp,Ki,Kd)
+Conts['Vstandard'] = pypid.Pid(Kp,Ki,Kd)
+Conts['Vderivfeedback'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Vderivfeedback'].set_derivfeedback(True)
-Conts['Vderivfeedbackdfilt'] = pid.Pid(Kp,Ki,Kd)
+Conts['Vderivfeedbackdfilt'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Vderivfeedbackdfilt'].set_derivfeedback(True)
 Conts['Vderivfeedbackdfilt'].set_derivfilter(2,wc)
-Conts['Vderivfeedbackbothfilt'] = pid.Pid(Kp,Ki,Kd)
+Conts['Vderivfeedbackbothfilt'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Vderivfeedbackbothfilt'].set_derivfeedback(True)
 Conts['Vderivfeedbackbothfilt'].set_derivfilter(2,wc)
 Conts['Vderivfeedbackbothfilt'].set_inputfilter(2,wc)
 
-Conts['Vwindup'] = pid.Pid(Kp,Ki,Kd)
+Conts['Vwindup'] = pypid.Pid(Kp,Ki,Kd)
 Conts['Vwindup'].set_derivfeedback(True)
 Conts['Vwindup'].set_derivfilter(2,wc)
 Conts['Vwindup'].set_inputfilter(2,wc)

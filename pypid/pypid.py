@@ -1,5 +1,8 @@
-"""PID controller class
-Independent of ROS
+"""
+.. module:: pypid.pypid
+    :synopsis: Module contining the PID controller class.
+
+.. moduleauthor:: Brian Bingham <briansbingham@gmail.com>
 """
 __version__ = "0.0.1"
 
@@ -7,8 +10,16 @@ from math import copysign
 from math import exp, tan, pi
 import numpy as np
 
-# For convenience...
 def saturate(num,level):
+    """Takes min of num and level, preserving sign
+    
+    Args:
+       num (float): Value to apply saturation to
+       level (float): Absolute maximum
+    
+    Returns:
+       float: saturated value
+    """
     return copysign(1,num)*min(abs(num),level)      
 
 def angleError(A,B=0.0,bound=180.0):
@@ -25,25 +36,47 @@ def angleError(A,B=0.0,bound=180.0):
         
 # Low-pass Filter Classes
 class Zerolowpass(object):
-    """
-    No filter
+    """Place older filter object - passthrough
+
     """
     def __init(self):
         pass
     def execute(self,dt,x):
+        """Passthrough
+        
+        Args:
+          dt (float): timestep
+          x (float): input to fitler
+        
+        Returns:
+          float: returns x
+        """
         return x
 
 class Firstlowpass(object):
-    """ 
-    Implements a first-order lowpass filter based on 
-    specified cut-off freq. (wc) in rad/s
+    """ Implements a first-order lowpass filter.
+    
+    Based on specified cut-off freq. (wc) in rad/s.  Running the filter is 
+    accomplished by calling the execute method repeatedly.
+
     """
     def __init__(self,wc):
+        """Initialize with the specified cutoff frequency
+
+        Args:
+          wc (float): Cutoff frequency in rad/s
+        """
         self.wc = float(wc)
         self.prevout = 0  # initialize previous input
     def execute(self,dt,x):
-        """
-        One step of the filter with input x and sample time dt
+        """One step of the filter with input x and sample time dt
+
+         Args:
+          dt (float): timestep in seconds
+          x (float): filter input
+        
+        Returns:
+          float: filter output
         """
         a = self.wc*dt/(self.wc*dt+1)
         self.prevout = (1-a)*self.prevout + a*x
@@ -55,10 +88,24 @@ class Secondbutter(object):
     on cut-off freq (wc) in rad/s
     """
     def __init__(self,wc):
+        """Initialize with the specified cutoff frequency
+
+        Args:
+          wc (float): Cutoff frequency in rad/s
+        """
         self.wc = float(wc)
         self.prevy = np.zeros(2)  # memory for prev. outputs
         self.prevx = np.zeros(2)  # memory for prev. inputs
     def execute(self,dt,x):
+        """One step of the filter with input x and sample time dt
+
+         Args:
+          dt (float): timestep in seconds
+          x (float): filter input
+        
+        Returns:
+          float: filter output
+        """
         wac = tan(self.wc*dt/2.0)
         # Make sure this is sufficiently far from zero
         eps = 1.0e-6  # minimum allowable value for wac
@@ -74,32 +121,28 @@ class Secondbutter(object):
         self.prevx[0]=x
         return out
 
-# Enumeration classes for describing variants
-class Dtype():
-    STANDARD=1
-    FIRSTORDER=2   # First-order filter, require Td in Pid obj.
-
-
 class Pid(object):
-    """
-    PID control object.
+    """ PID controller
 
     Standard controller is initiated by defining the gains as
-    Kp: Proportional gain
-    Ki: Integral gain
-    Kd: Derivative gain
+
+    * Kp, Proportional gain
+    * Ki, Integral gain
+    * Kd, Derivative gain
 
     General workflow is to instatiate the basic controller object,
     then setup the architctureal and filter options,
     then when using the feedback 
-    - change the setpoint (goal) by with the set_setpoint() attribute
-    - call the execute() attribute with the sample time and 
+
+    * change the setpoint (goal) by with the set_setpoint() attribute
+    * call the execute() attribute with the sample time and 
        state/process-variable (input to the controller) to generate the 
        control output
 
     Optional Variants:
-
-    * Rate Sensor *
+    
+    *Rate Sensor*
+    
     In the standard from the derivative of the process variable is 
     estimated based on the input.  If there is a separate sensor for the 
     process-variable and the rate of the process variable (e.g., compass 
@@ -107,26 +150,35 @@ class Pid(object):
     - To use - Call execute with the optional dstate input argument
     The dstate value should be the measure rate of change.
     
-    * Angular Input *
+    *Angular Input*
+    
     If the input/process-variable has a discontinuity, e.g, and angle
     that wraps at 360 or 2*pi, the controller will unwrap accordingly.
-    - To use, call the set_inputisangle(True)
+    
+    To use, call the set_inputisangle(True)
 
-    * Input Filter *
+    *Input Filter*
+    
     Puts a low-pass filter in the input/state/process-variable input.
     Filter can...
-      - none: order=0
-      - first-order: order=1
-      - second-order: order=2
-    The cut-off frequency (wc) is specified in rad/s
-    - To use, call the set_inputfilter() function, specifing order and cut-off
+    
+      * none: order=0
+      * first-order: order=1
+      * second-order: order=2
 
-    * Derivative Filter *
+    The cut-off frequency (wc) is specified in rad/s
+    
+    To use, call the set_inputfilter() function, specifing order and cut-off
+
+    *Derivative Filter*
+   
     Puts a low-pass filter on the derivative estimate.  Same filters
     as the input filter
-    - To use, call the set_derivfilter() function with order and cut-off
+    
+    To use, call the set_derivfilter() function with order and cut-off
 
-    * Derivative Feedback *
+    *Derivative Feedback*
+   
     In standard form (derivfeedback=False), 
     the derivative term is calculated based on the 
     derivative of the error (setpoint-state).  
@@ -134,14 +186,16 @@ class Pid(object):
     feedback path so that the derivative term is the derivative of state alone.
     - To use, call the set_derivfeedback(Truee) function
     
-    * Anti-Windup *
+    *Anti-Windup*
+
     The maximum contribution of the I term in the controller output is set
     by the maxIout parameter.  This is set in units of controller output,
     so the internal integration limit is back calculated based on the value
     of Ki.
-    - To use, call the set_maxIout() function.
     
-    * Rate Limits TODO *
+    To use, call the set_maxIout() function.
+    
+    *Rate Limits TODO*
     
     """
     def __init__(self,Kp,Ki,Kd,
@@ -149,8 +203,12 @@ class Pid(object):
                  inputIsAngle=False,
                  inputFilterOrder=0,
                  derivFilterOrder=0):
-        """
-        Initial configuratoin has no options - just vanilla PID
+        """Initial configuration of vanilla PID
+
+        Args:
+          Kp (float): proportional gain
+          Ki (float): integral gain
+          Kd (float): derivative gain
         """
         self.Kp = float(Kp)
         self.Ki = float(Ki)
@@ -194,35 +252,93 @@ class Pid(object):
     
     def set_inputfilter(self,order,wc):
         """
-        Setup input filter 
-        wc is in rad/s
+        Set input filter type and cutoff freq.
+
+        Args:
+          order (int): 0 (no-filter, 1 (first-order) or 2 second-order)
+          wc (float): cutoff frequency in rad/s
         """ 
         self.inputfilter = self.initfilter(order,wc)
 
     def set_derivfilter(self,order,wc):
+        """
+        Set derivative filter type and cutoff freq.
+
+        Args:
+          order (int): 0 (no-filter, 1 (first-order) or 2 second-order)
+          wc (float): cutoff frequency in rad/s
+        """ 
         self.derivfilter = self.initfilter(order,wc)
 
     def set_derivfeedback(self,derivfeedback):
+        """
+        Set/unset use of derivative in feedback loop
+
+        Args:
+          derivfeedback (bool):
+           
+            * True: derivative in feedback path
+            * False: derivative in forward path
+        """ 
         self.derivfeedback=bool(derivfeedback)
     
     def set_maxIout(self,maxIout):
+        """
+        Set anti-windup integration maximum
+        
+        Args:
+          maxIout (float): maximum value for integration contribution to outpu
+          
+        """
         self.maxIout=float(maxIout)
 
     def set_inputisangle(self,inputIsAngle,bound=pi):
+        """
+        Set/unset input as an angle
+        
+        Args:
+          inputIsAngle (bool): 
+          
+            * False - no discontinuity (default)
+            * True - input with discontinuity
+           
+          bound (float): sets bounds for discontinuity
+          e.g., bound=pi (default) for angle in radians to limit to +/-pi
+          e.g., bound=180.0 (default) for angle in radians to limit to +/-180
+        """
         self.inputIsAngle=bool(inputIsAngle)
-        self.anglewrap = bound
+        self.anglewrap = float(bound)
 
     def set_setpoint(self,setpoint):
+        """ Change the setpoint (goal) of the control loop
+        
+        Args:
+          setpoint (float): new setpoint value
+        """
         self.setpoint=float(setpoint)
     
     def execute(self,dt,state,dstate=None):
-        """
-        Pid implementation call
+        """ Pid implementation call
         
-        dt - time step in seconds
-        state - process variable, fed back from plant
-        dstate - rate of change of process variable
-                 If None, then will estimate derivative
+        Args:
+          dt(float): time step in seconds
+          state(float): process variable, fed back from plant
+          dstate(floaT): rate of change of process variable.
+          
+        If dstate is None, then will estimate derivative from the state input
+        Use both state and dstate inputs if you have a position and rate sensor
+
+        Returns:
+          numpy array of length 7...
+            
+          * Output(P+I+D)
+          * P
+          * I
+          * D
+          * Error
+          * Setpoint
+          * Derivative estimate
+          * Integrator estimate
         """
         if dt < 1.0e-6:
             return np.array([0,0,0,0])

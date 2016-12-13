@@ -1,5 +1,5 @@
 # To be run with ipython --pylab
-
+from numpy import *
 import pid
 reload (pid)
 
