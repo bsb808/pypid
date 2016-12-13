@@ -13,7 +13,7 @@ version = re.search(
     ).group(1)
 
 # reuse the readme for the package description
-with open("README.md", "rb") as f:
+with open("readme.rst", "rb") as f:
     long_descr = f.read().decode("utf-8")
 
 # handle version based import requirements
