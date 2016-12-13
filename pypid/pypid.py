@@ -6,6 +6,7 @@
 """
 __version__ = "0.0.1"
 
+
 from math import copysign
 from math import exp, tan, pi
 import numpy as np

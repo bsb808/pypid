@@ -19,6 +19,7 @@ import os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('../..'))
+#sys.path.insert(0,os.path.abspath('../../pypid'))
 
 # -- General configuration ------------------------------------------------
 
@@ -30,6 +31,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.autosummary',
 ]
 autoapi_type = 'python'
 autoapi_dir = '../pypid'
