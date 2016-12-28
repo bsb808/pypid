@@ -282,7 +282,13 @@ class Pid(object):
             * False: derivative in forward path
         """ 
         self.derivfeedback=bool(derivfeedback)
-    
+
+    def set_Ki(self,Ki):
+        """
+        Set integrtor gain - also zero the integrator
+        """
+        self.I = 0.0
+        self.Ki = Ki
     def set_maxIout(self,maxIout):
         """
         Set anti-windup integration maximum
