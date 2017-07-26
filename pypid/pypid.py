@@ -40,8 +40,9 @@ class Zerolowpass(object):
     """Place older filter object - passthrough
 
     """
-    def __init(self):
-        pass
+    def __init__(self):
+        self.wc = 0.0
+
     def execute(self,dt,x):
         """Passthrough
         
@@ -232,6 +233,23 @@ class Pid(object):
         self.prevsetpoint = 0.0  # for calculating raw deriv
         self.prevstate = 0.0
         self.setpoint = 0.0
+
+    def __str__(self):
+        '''
+        String representation of the class
+        '''
+        if self.maxIout == None:
+            maxIoutstr = 'None'
+        else:
+            maxIoutstr = '%.2e'%self.maxIout
+      
+        msg = ('pypid: Kp=%.2e, Kd=%.2e, Ki=%.2e, maxIout=%s, '
+               'inputIsAngle=%s, inputfilter=%s,%.1e, derivfilter=%s,%s '
+               %(self.Kp, self.Kd, self.Ki, maxIoutstr,
+                 self.inputIsAngle, type(self.inputfilter), 
+                 self.inputfilter.wc, type(self.derivfilter),
+                 str(self.derivfilter.wc) ) )
+        return msg
 
 
     def initfilter(self,order,wc):

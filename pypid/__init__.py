@@ -1,2 +1,2 @@
 import pypid
-from pypid import Pid
+from .pypid import Pid
