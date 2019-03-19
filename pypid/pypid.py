@@ -43,6 +43,9 @@ class Zerolowpass(object):
     def __init__(self):
         self.wc = 0.0
 
+    def reset(self,initcond):
+        pass
+
     def execute(self,dt,x):
         """Passthrough
         
@@ -70,6 +73,13 @@ class Firstlowpass(object):
         """
         self.wc = float(wc)
         self.prevout = 0  # initialize previous input
+
+    def reset(self,initcond):
+        '''
+        Reset with new initial conditions
+        '''
+        self.prevout = initcond
+        
     def execute(self,dt,x):
         """One step of the filter with input x and sample time dt
 
@@ -98,6 +108,14 @@ class Secondbutter(object):
         self.wc = float(wc)
         self.prevy = np.zeros(2)  # memory for prev. outputs
         self.prevx = np.zeros(2)  # memory for prev. inputs
+
+    def reset(self,initcond):
+        '''
+        Reset with new initial conditions
+        '''
+        self.prevy = initcond * np.array([1.0, 1.0])
+        self.prevx = initcond * np.array([1.0, 1.0])
+        
     def execute(self,dt,x):
         """One step of the filter with input x and sample time dt
 
@@ -251,6 +269,12 @@ class Pid(object):
                  str(self.derivfilter.wc) ) )
         return msg
 
+    def reset_filters(self):
+        '''
+        Reset filters using current setpoint as initial values
+        '''
+        self.inputfilter.reset(self.setpoint)
+        
 
     def initfilter(self,order,wc):
         """
@@ -341,7 +365,7 @@ class Pid(object):
           setpoint (float): new setpoint value
         """
         self.setpoint=float(setpoint)
-    
+        
     def execute(self,dt,state,dstate=None):
         """ Pid implementation call
         
@@ -367,14 +391,19 @@ class Pid(object):
         """
         if dt < 1.0e-6:
             return np.array([0,0,0,0])
+
+        # Input filter
+        # Filtered setpoint
+        sp_filt = self.inputfilter.execute(dt,self.setpoint)
+
         # Calc error
         if self.inputIsAngle:
-            err=angleError(self.setpoint,state,self.anglewrap)
+            err=angleError(sp_filt,state,self.anglewrap)
         else:
-            err=self.setpoint-state
+            err=sp_filt-state
         # Proportional
         #print err
-        P = self.Kp*self.inputfilter.execute(dt,err)
+        P = self.Kp*err # self.Kp*self.inputfilter.execute(dt,err)
         # Derivative
         if dstate is None:
             # calculate raw derivative
@@ -392,12 +421,12 @@ class Pid(object):
         else:
             # Derivative in forward loop
             if self.inputIsAngle:
-                dsetpoint = angleError(self.setpoint,self.prevsetpoint,
+                dsetpoint = angleError(sp_filt,self.prevsetpoint,
                                        self.anglewrap)/dt
             else:
-                dsetpoint = (self.setpoint-self.prevsetpoint)/dt
+                dsetpoint = (sp_filt-self.prevsetpoint)/dt
             deriv = dsetpoint-dest
-        self.prevsetpoint = self.setpoint
+        self.prevsetpoint = sp_filt
         derivative = self.derivfilter.execute(dt,deriv) 
         D = self.Kd*derivative
         # Integral 
@@ -411,5 +440,5 @@ class Pid(object):
         # Sum
         Out = P+I+D
 
-        return np.array([Out,P,I,D,err,self.setpoint,derivative,self.I])
+        return np.array([Out,P,I,D,err,sp_filt,derivative,self.I])
 
